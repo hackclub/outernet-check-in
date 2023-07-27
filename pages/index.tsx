@@ -1,11 +1,140 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
+import { useEffect, useId, useRef, useState } from 'react'
+import fuzzysort from 'fuzzysort'
 
 const inter = Inter({ subsets: ['latin'] })
 
+// const FilterCard = ({
+//   filterKey,
+//   setFilter,
+//   removeFilter
+// }: {
+//   filterKey: string;
+//   setFilter: (key: string, check: FilterCheck) => void;
+//   removeFilter: (key: string) => void;
+// }) => {
+//   const inputRef = useRef<HTMLInputElement>(null);
+//   const [text, setText] = useState('');
+//   const id = useId();
+
+//   return (
+//     <section style={{
+//       cursor: 'text'
+//     }} onClick={() => {
+//       if (document.activeElement?.id !== id) {
+//         inputRef?.current?.focus?.()
+//       }
+//     }}>
+//       <h2>Search by Name</h2>
+//       <input id={id} ref={inputRef} type="text" placeholder="Name" value={text} onChange={e => {
+//         if (e.target.value) {
+//           setFilter(filterKey, (value: string) => value.toLowerCase().includes(e.target.value.toLowerCase()));
+//         } else {
+//           removeFilter(filterKey);
+//         }
+//         setText(e.target.value);
+//       }} />
+//     </section>
+//   )
+// }
+
+
+interface Record {
+  id: string;
+  name: string;
+  pod: string;
+  isLeader: boolean;
+  checkedIn: boolean;
+}
+
+// type FilterCheck = (value: any) => boolean;
+
+// interface Filter {
+//   key: string;
+//   check: FilterCheck;
+// }
+
+// type FilterObject = {[key: string]: Filter};
+
+// const thing: FilterObject = {
+//   name: {
+//     key: 'name',
+//     check: (value: string) => true
+//   }
+// }
+
+// function useFilter (data: Record[]) {
+//   const [filters, setFilters] = useState<FilterObject>({});
+//   const [filteredData, setFilteredData] = useState(data);
+
+//   const setFilter = (key: string, check: FilterCheck) => {
+//     setFilters({
+//       ...filters,
+//       [key]: {
+//         key,
+//         check
+//       }
+//     });
+//   }
+
+//   const removeFilter = (key: string) => {
+//     setFilters({
+//       ...filters,
+//       [key]: {
+//         key,
+//         check: () => true
+//       }
+//     });
+//   }
+
+//   useEffect(() => {
+//     setFilteredData(data.filter(record => {
+//       for (const filter of Object.values(filters)) {
+//         if (!filter.check((record as any)[filter.key])) return false;
+//       }
+//       return true;
+//     }));
+//   }, [filters, data]);
+
+//   return [filteredData, setFilter, removeFilter];
+// }
+
 export default function Home() {
+  const [nameFilter, setNameFilter] = useState('');
+  const rawData: Record[] = [
+    {
+      id: "recJaPxHf0i8MWsK7",
+      name: "Toby Brown",
+      pod: "Pod 1",
+      isLeader: true,
+      checkedIn: true
+    },
+    {
+      id: "foobar",
+      name: "Sahiti",
+      pod: "Pod 2",
+      isLeader: false,
+      checkedIn: true
+    },
+    {
+      id: "fizzbuzz",
+      name: "Wahoo Fish",
+      pod: "Pod 3",
+      isLeader: false,
+      checkedIn: false
+    }
+  ];
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const nameFilteredData = nameFilter ? fuzzysort.go(nameFilter, rawData, {
+    key: 'name'
+  }).map(result => result.obj) : rawData;
+
+  const filteredData = nameFilteredData;
+
   return (
     <>
       <Head>
@@ -14,100 +143,52 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={`${styles.main} ${inter.className}`}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>pages/index.tsx</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
-        </div>
+      <main>
+        <h1>Outernet Check-In</h1>
+        
+        <section style={{
+          cursor: 'text'
+        }}>
+          <h2>Search by Name</h2>
+          <input type="text" placeholder="Name" value={nameFilter} onChange={e => setNameFilter(e.target.value)} />
+        </section>
 
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-        </div>
+        <h2>Available</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Pod</th>
+              <th>Leader</th>
+              <th>Checked In</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map(record => (
+              <tr key={record.id}>
+                <td>{record.name}</td>
+                <td>{record.pod}</td>
+                <td>{record.isLeader ? 'Yes' : 'No'}</td>
+                <td>{record.checkedIn ? 'Yes' : 'No'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
+        {filteredData.length === 0 ? (
+          <center>
+            <h3 style={{
+              color: 'var(--text-muted)',
+              marginTop: '3rem',
+              marginBottom: '3rem'
+            }}>No Results</h3>
+            <hr />
+          </center>
+        ) : <div style={{
+          marginBottom: '3rem',
+        }} />}
 
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
-        </div>
+        <h2>Selected</h2>
       </main>
     </>
   )
