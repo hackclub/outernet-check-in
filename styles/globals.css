@@ -849,24 +849,6 @@ body > footer {
     border: 1px solid #000;
   }
 
-  body,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  pre,
-  code,
-  button,
-  input,
-  textarea,
-  footer,
-  summary,
-  strong {
-    color: #000;
-  }
-
   summary::marker {
     color: #000;
   }
