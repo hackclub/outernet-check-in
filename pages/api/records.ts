@@ -24,7 +24,7 @@ export default async(req: NextApiRequest, res: NextApiResponse) => {
 
     if (req.method === "PATCH") {
         try {
-            await fetch(`https://api.airtable.com/v0/applfCora9qnm274A/Main/${req.body.id}`, {
+            const resp = await fetch(`https://api.airtable.com/v0/applfCora9qnm274A/Main/rec25ZxwTyfwJj8EO`, {
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${process.env.AIRTABLE_ACCESS_TOKEN}`,
@@ -32,12 +32,14 @@ export default async(req: NextApiRequest, res: NextApiResponse) => {
             },
             body: JSON.stringify({
                 "fields": {
-                    "pod": req.body.pod,
-                    "checkedIn": true,
+                    pod: "Red",
+                    checkedIn: true,
                 }
             }),
         })
-        return res.status(200).json("Grazzi mile!");
+            const data = await resp.json();
+            console.log(data);
+            return res.status(200).json(data);
         } catch (error) {
             console.log(error);
         }
