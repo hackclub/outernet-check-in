@@ -96,42 +96,48 @@ h1 {
   margin-top: 0;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1:not(.ignoreHeaderSpacing),
+h2:not(.ignoreHeaderSpacing),
+h3:not(.ignoreHeaderSpacing),
+h4:not(.ignoreHeaderSpacing),
+h5:not(.ignoreHeaderSpacing),
+h6:not(.ignoreHeaderSpacing),
+.headerSpacing {
   margin-bottom: 12px;
   margin-top: 24px;
 }
 
-h1 {
+.ignoreHeaderSpacing {
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
+
+h1, .h1 {
   color: #000;
   color: var(--text-bright);
 }
 
-h2 {
+h2, .h2 {
   color: #000;
   color: var(--text-bright);
 }
 
-h3 {
+h3, .h3 {
   color: #000;
   color: var(--text-bright);
 }
 
-h4 {
+h4, .h4 {
   color: #000;
   color: var(--text-bright);
 }
 
-h5 {
+h5, .h5 {
   color: #000;
   color: var(--text-bright);
 }
 
-h6 {
+h6, .h6 {
   color: #000;
   color: var(--text-bright);
 }
@@ -147,6 +153,12 @@ h3,
 h4,
 h5,
 h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6,
 b,
 strong,
 th {
@@ -264,6 +276,24 @@ button {
   border: none;
   border-radius: 6px;
   outline: none;
+}
+
+button.success {
+  background-color: #559956;
+  color: white;
+}
+
+button.success:hover {
+  background-color: #4a814b;
+}
+
+button.error {
+  background-color: #be3d3d;
+  color: white;
+}
+
+button.error:hover {
+  background-color: #9d4141;
 }
 
 textarea {
@@ -883,4 +913,21 @@ section > *:first-child {
 section > input[type='text'], section > input[type='email'], section > input[type='password'] {
   width: 100%;
   box-sizing: border-box;
+}
+
+.highlighted {
+  /* make this especailly fancy; border radius, nice yellow, etc. */
+  padding: 1px;
+  margin: -1px;
+  border-radius: 4px;
+  background-color: rgb(245, 215, 64);
+}
+
+.green {
+  color: rgb(64, 120, 64);
+}
+
+td:first-child, th:first-child {
+  word-wrap: break-word;
+  max-width: 60px;
 }

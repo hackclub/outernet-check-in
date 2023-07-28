@@ -1,6 +1,8 @@
 import Head from 'next/head'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import fuzzysort from 'fuzzysort'
+import { Record } from '@/lib/record'
+import { truncate } from 'fs'
 
 // const FilterCard = ({
 //   filterKey,
@@ -36,14 +38,6 @@ import fuzzysort from 'fuzzysort'
 //   )
 // }
 
-
-interface Record {
-  id: string;
-  name: string;
-  pod: string;
-  isLeader: boolean;
-  checkedIn: boolean;
-}
 
 // type FilterCheck = (value: any) => boolean;
 
@@ -105,39 +99,27 @@ We should:
 --------------------
 */
 
-export default function Home() {
+export default function Home({ records }: { records: Record[] }) {
+  console.log("FOOBAR", { records })
   const [nameFilter, setNameFilter] = useState('');
-  const rawData: Record[] = [
-    {
-      id: "recJaPxHf0i8MWsK7",
-      name: "Toby Brown",
-      pod: "Pod 1",
-      isLeader: true,
-      checkedIn: true
-    },
-    {
-      id: "foobar",
-      name: "Sahiti",
-      pod: "Pod 2",
-      isLeader: false,
-      checkedIn: true
-    },
-    {
-      id: "fizzbuzz",
-      name: "Wahoo Fish",
-      pod: "Pod 3",
-      isLeader: false,
-      checkedIn: false
-    }
-  ];
+  const [data, setData] = useState(records);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const unselected = data.filter(record => !selectedIds.includes(record.id));
+  const selected = data.filter(record => selectedIds.includes(record.id));
 
-  const nameFilteredData = nameFilter ? fuzzysort.go(nameFilter, rawData, {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const renderedAvailable = nameFilter ? fuzzysort.go(nameFilter, unselected, {
     key: 'name'
-  }).map(result => result.obj) : rawData;
+  }).map(result => ({
+    ...result.obj,
+    renderedName: fuzzysort.highlight(result, (m, i) => <b key={i} className="highlighted" data-content={m}>{m}</b>)
+  })) : unselected;
 
-  const filteredData = nameFilteredData;
+  const truncatedAvailable = renderedAvailable.slice(0, 6);
+
+  const renderedSelected = selected;
 
   return (
     <>
@@ -154,32 +136,56 @@ export default function Home() {
           cursor: 'text'
         }}>
           <h2>Search by Name</h2>
-          <input type="text" placeholder="Name" value={nameFilter} onChange={e => setNameFilter(e.target.value)} />
+          <input ref={inputRef} type="text" placeholder="Name" value={nameFilter} onChange={e => setNameFilter(e.target.value)} onKeyDown={e => {
+            if (e.key !== "Enter") return;
+            inputRef.current?.select();
+            if (selectedIds.includes(renderedAvailable[0].id)) {
+              setSelectedIds(selectedIds.filter(id => id !== renderedAvailable[0].id));
+            } else {
+              setSelectedIds([...selectedIds, renderedAvailable[0].id]);
+            }
+          }} />
         </section>
 
-        <h2>Available</h2>
+        <h2>Available ({renderedAvailable.length})</h2>
         <table>
           <thead>
             <tr>
-              <th>Name</th>
+              <th style={{
+                width: '36px'
+              }}></th>
+              <th style={{
+                width: '400px'
+              }}>Name</th>
               <th>Pod</th>
               <th>Leader</th>
               <th>Checked In</th>
             </tr>
           </thead>
           <tbody>
-            {filteredData.map(record => (
-              <tr key={record.id}>
-                <td>{record.name}</td>
+            {truncatedAvailable.map(record => (
+              <tr key={record.id} style={{
+                cursor: 'pointer'
+              }} onClick={() => {
+                if (selectedIds.includes(record.id)) {
+                  setSelectedIds(selectedIds.filter(id => id !== record.id));
+                } else {
+                  setSelectedIds([...selectedIds, record.id]);
+                }
+              }}>
+                <td style={{
+                  width: '36px'
+                }}>➕</td>
+                <td>{record.renderedName || record.name}</td>
                 <td>{record.pod}</td>
-                <td>{record.isLeader ? 'Yes' : 'No'}</td>
+                <td>{record.isLeader ? <span className="green">✅ Yes</span> : 'No'}</td>
                 <td>{record.checkedIn ? 'Yes' : 'No'}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {filteredData.length === 0 ? (
+        {truncatedAvailable.length === 0 ? (
           <center>
             <h3 style={{
               color: 'var(--text-muted)',
@@ -188,12 +194,102 @@ export default function Home() {
             }}>No Results</h3>
             <hr />
           </center>
-        ) : <div style={{
-          marginBottom: '3rem',
-        }} />}
+        ) : (renderedAvailable.length - truncatedAvailable.length >= 1 ? (
+          <center>
+            <h3 style={{
+              color: 'var(--text-muted)',
+              marginTop: '2rem',
+              marginBottom: '2rem'
+            }}>+{renderedAvailable.length - truncatedAvailable.length} more</h3>
+            <hr />
+          </center>
+        ) : (
+          <div style={{
+            marginBottom: '4rem'
+          }}></div>
+        ))}
 
-        <h2>Selected</h2>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'top'
+        }} className="headerSpacing">
+          <h2 className="ignoreHeaderSpacing">
+            Selected ({renderedSelected.length})
+          </h2>
+          <span style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            alignItems: 'center'
+
+          }}>
+            <button className="error" style={{
+              marginRight: '0.75rem',
+              display: 'inline-flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '39px',
+            }} onDoubleClick={() => {
+              setSelectedIds([]);
+            }}><span>Clear</span><span style={{
+              fontSize: '0.6rem'
+            }}>Double Click</span></button>
+            <button className="success">Check In</button>
+          </span>
+        </div>
+
+        <table style={{
+          minHeight: '200px',
+          marginBottom: '6rem'
+        }}>
+          <thead>
+            <tr>
+              <th style={{
+                width: '36px'
+              }}></th>
+              <th style={{
+                width: '400px'
+              }}>Name</th>
+              <th>Pod</th>
+              <th>Leader</th>
+              <th>Checked In</th>
+            </tr>
+          </thead>
+          <tbody>
+            {renderedSelected.map(record => (
+              <tr key={record.id} style={{
+                cursor: 'pointer'
+              }} onClick={() => {
+                if (selectedIds.includes(record.id)) {
+                  setSelectedIds(selectedIds.filter(id => id !== record.id));
+                } else {
+                  setSelectedIds([...selectedIds, record.id]);
+                }
+              }}>
+                <td style={{
+                  width: '36px'
+                }}>➖</td>
+                <td>{record.renderedName || record.name}</td>
+                <td>{record.pod}</td>
+                <td>{record.isLeader ? <span className="green">✅ Yes</span> : 'No'}</td>
+                <td>{record.checkedIn ? 'Yes' : 'No'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </main>
     </>
   )
+}
+
+export async function getServerSideProps() {
+  const res = await fetch('http://localhost:3001/api/records');
+  const records = await res.json();
+
+  return {
+    props: { records }
+  };
 }
