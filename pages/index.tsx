@@ -289,11 +289,14 @@ export default function Home({ serverRecords }: { serverRecords: Record[] }) {
               await Events.checkInGroup(ids, "Blue Pod");
               await fetch("/api/records", {
                 method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json"
+                },
                 body: JSON.stringify({
                   pod: selectedPod,
                   ids,
                 })
-              })
+              });
               setSelectedIds([]);
             }}>Check In</button>
           </span>
