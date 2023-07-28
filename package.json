@@ -13,6 +13,7 @@
     "@types/node": "20.4.5",
     "@types/react": "18.2.17",
     "@types/react-dom": "18.2.7",
+    "@vercel/kv": "^0.2.2",
     "airtable": "^0.12.1",
     "axios": "^1.4.0",
     "fuzzysort": "^2.0.4",

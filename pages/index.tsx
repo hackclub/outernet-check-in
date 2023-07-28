@@ -3,6 +3,7 @@ import { useRef, useState, useEffect } from 'react'
 import fuzzysort from 'fuzzysort'
 import { Record } from '@/lib/record'
 import { truncate } from 'fs'
+import Events from '@/lib/events'
 
 // const FilterCard = ({
 //   filterKey,
@@ -244,7 +245,6 @@ export default function Home({ records }: { records: Record[] }) {
         </div>
 
         <table style={{
-          minHeight: '200px',
           marginBottom: '6rem'
         }}>
           <thead>
