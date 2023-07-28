@@ -925,6 +925,9 @@ section > input[type='text'], section > input[type='email'], section > input[typ
 
 .green {
   color: #09ce6b;
+  background-color: #09ce6c64;
+  border-radius: 4px;
+  padding: 1px;
 }
 
 td:first-child, th:first-child {

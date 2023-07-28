@@ -4,6 +4,7 @@ import fuzzysort from 'fuzzysort'
 import { Record } from '@/lib/record'
 import { truncate } from 'fs'
 import Events from '@/lib/events'
+import useRecords, { getServerRecords } from '@/lib/useRecords'
 
 // const FilterCard = ({
 //   filterKey,
@@ -100,15 +101,46 @@ We should:
 --------------------
 */
 
-export default function Home({ records }: { records: Record[] }) {
+export default function Home({ serverRecords }: { serverRecords: Record[] }) {
+  const [records] = useRecords({ serverRecords });
+  const data = records.filter((record: Record) => !record.checkedIn);
+  const checkedInRendered = records.filter((record: Record) => record.checkedIn);
+
   const [nameFilter, setNameFilter] = useState('');
-  const [data, setData] = useState(records);
+
+  const [selectedPod, setSelectedPod] = useState('Green Pod');
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const unselected = data.filter(record => !selectedIds.includes(record.id));
   const selected = data.filter(record => selectedIds.includes(record.id));
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const podSizes = {
+    green: records.filter((record: Record) => record.pod == "Green Pod").length,
+    blue: records.filter((record: Record) => record.pod == "Blue Pod").length,
+    purple: records.filter((record: Record) => record.pod == "Purple Pod").length,
+    pink: records.filter((record: Record) => record.pod == "Pink Pod").length,
+    red: records.filter((record: Record) => record.pod == "Red Pod").length,
+    orange: records.filter((record: Record) => record.pod == "Orange Pod").length,
+    yellow: records.filter((record: Record) => record.pod == "Yellow Pod").length
+  };
+
+  useEffect(() => {
+    const availablePods = Object.keys(podSizes).filter(key => (podSizes as any)[key] < 20);
+    const transformed = availablePods.map(key => (
+      key === 'green' ? 'Green Pod' :
+      key === 'blue' ? 'Blue Pod' :
+      key === 'purple' ? 'Purple Pod' :
+      key === 'pink' ? 'Pink Pod' :
+      key === 'red' ? 'Red Pod' :
+      key === 'orange' ? 'Orange Pod' :
+      key === 'yellow' ? 'Yellow Pod' : null
+    ));
+    if (!transformed.includes(selectedPod as any)) {
+      setSelectedPod((transformed as any)[0]);
+    }
+  }, [Object.values(podSizes).join(',')]);
 
   const renderedAvailable = nameFilter ? fuzzysort.go(nameFilter, unselected, {
     key: 'name'
@@ -168,7 +200,10 @@ export default function Home({ records }: { records: Record[] }) {
           <tbody>
             {truncatedAvailable.map(record => (
               <tr key={record.id} style={{
-                cursor: 'pointer'
+                cursor: 'pointer',
+                ...(record.checkedIn ? {
+                  backgroundColor: '#ccffdd'
+                } : {})
               }} onClick={() => {
                 if (selectedIds.includes(record.id)) {
                   setSelectedIds(selectedIds.filter(id => id !== record.id));
@@ -228,6 +263,15 @@ export default function Home({ records }: { records: Record[] }) {
             alignItems: 'center'
 
           }}>
+            <select name="pod" value={selectedPod} onChange={e => setSelectedPod(e.target.value)}>
+              <option value="Green Pod" disabled={podSizes.green >= 20}>🟢 Green Pod ({podSizes.green})</option>
+              <option value="Blue Pod" disabled={podSizes.blue >= 20}>🔵 Blue Pod ({podSizes.blue})</option>
+              <option value="Purple Pod" disabled={podSizes.purple >= 20}>🟣 Purple Pod ({podSizes.purple})</option>
+              <option value="Pink Pod" disabled={podSizes.pink >= 20}>💖 Pink Pod ({podSizes.pink})</option>
+              <option value="Red Pod" disabled={podSizes.red >= 20}>🔴 Red Pod ({podSizes.red})</option>
+              <option value="Orange Pod" disabled={podSizes.orange >= 20}>🟠 Orange Pod ({podSizes.orange})</option>
+              <option value="Yellow Pod" disabled={podSizes.yellow >= 20}>🟡 Yellow Pod ({podSizes.yellow})</option>
+            </select>
             <button className="error" style={{
               marginRight: '0.75rem',
               display: 'inline-flex',
@@ -240,7 +284,18 @@ export default function Home({ records }: { records: Record[] }) {
             }}><span>Clear</span><span style={{
               fontSize: '0.6rem'
             }}>Double Click</span></button>
-            <button className="success">Check In</button>
+            <button className="success" onClick={async () => {
+              const ids = renderedSelected.map((record: Record) => record.id);
+              await Events.checkInGroup(ids, "Blue Pod");
+              await fetch("/api/records", {
+                method: "PATCH",
+                body: JSON.stringify({
+                  pod: selectedPod,
+                  ids,
+                })
+              })
+              setSelectedIds([]);
+            }}>Check In</button>
           </span>
         </div>
 
@@ -263,7 +318,10 @@ export default function Home({ records }: { records: Record[] }) {
           <tbody>
             {renderedSelected.map(record => (
               <tr key={record.id} style={{
-                cursor: 'pointer'
+                cursor: 'pointer',
+                ...(record.checkedIn ? {
+                  backgroundColor: '#ccffdd'
+                } : {})
               }} onClick={() => {
                 if (selectedIds.includes(record.id)) {
                   setSelectedIds(selectedIds.filter(id => id !== record.id));
@@ -282,16 +340,51 @@ export default function Home({ records }: { records: Record[] }) {
             ))}
           </tbody>
         </table>
+
+
+        <h2>Checked-In ({checkedInRendered.length})</h2>
+        <table style={{
+          marginBottom: '6rem'
+        }}>
+          <thead>
+            <tr>
+              <th style={{
+                width: '36px'
+              }}></th>
+              <th style={{
+                width: '400px'
+              }}>Name</th>
+              <th>Pod</th>
+              <th>Leader</th>
+              <th>Checked In</th>
+            </tr>
+          </thead>
+          <tbody>
+            {checkedInRendered.map(record => (
+              <tr key={record.id} style={{
+                cursor: 'pointer',
+                ...(record.checkedIn ? {
+                  backgroundColor: '#ccffdd'
+                } : {})
+              }}>
+                <td style={{
+                  width: '36px'
+                }}>✅</td>
+                <td>{record.renderedName || record.name}</td>
+                <td>{record.pod}</td>
+                <td>{record.isLeader ? <span className="green">✅ Yes</span> : 'No'}</td>
+                <td>{record.checkedIn ? 'Yes' : 'No'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </main>
     </>
   )
 }
 
 export async function getServerSideProps() {
-  const res = await fetch(`${process.env.URL}/api/records`);
-  const records = await res.json();
-
   return {
-    props: { records }
+    props: { serverRecords: await getServerRecords() }
   };
 }
