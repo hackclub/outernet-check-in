@@ -48,14 +48,21 @@ export default async(req: NextApiRequest, res: NextApiResponse) => {
     if (req.method === "PATCH") {
         try {
             const checkIn = async (id: string, pod: string) => {
+                // const oldData = await fetch(`https://api.airtable.com/v0/applfCora9qnm274A/Main/${id}`, {
+                //     method: "GET",
+                //     headers: {
+                //         Authorization: `Bearer ${process.env.AIRTABLE_ACCESS_TOKEN}`,
+                //     }
+                // }).then((res) => res.json());
                 const resp = await fetch(`https://api.airtable.com/v0/applfCora9qnm274A/Main/${id}`, {
-                    method: "PUT",
+                    method: "PATCH",
                     headers: {
                         Authorization: `Bearer ${process.env.AIRTABLE_ACCESS_TOKEN}`,
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
                         fields: {
+                            // ...((oldData as any).fields as any),
                             "Pod": pod,
                             "Checked In?": true
                         }
@@ -75,7 +82,7 @@ export default async(req: NextApiRequest, res: NextApiResponse) => {
                 const status = await checkIn(id, req.body.pod);
                 if (!status) failed = true;
 
-                if (!isLast) await sleep(220);
+                if (!isLast) await sleep(420);
             }
             
             if (!failed) {
