@@ -43,8 +43,38 @@ export default function useRecords ({ serverRecords, speedy = false }: { speedy?
 }
 
 export async function getServerRecords () {
-    const res = await fetch(`${process.env.URL}/api/records`);
-    const records = await res.json() as Record[];
+    let records: Record[] = [];
+
+    try {
+        const fetchPage = async (offset: string) => {
+            const pageSize = 100;
+            const response = await fetch(`https://api.airtable.com/v0/applfCora9qnm274A/Main?offset=${offset}&pageSize=${pageSize}`, {
+                headers: {
+                    Authorization: `Bearer ${process.env.AIRTABLE_ACCESS_TOKEN}`,
+                }
+            }).then((res) => res.json());
+
+            const records: Record[] = (response.records || []).map((record: any) => ({
+                id: record.id,
+                name: record.fields["Name"],
+                pod: record.fields["Pod"],
+                isLeader: record.fields["Club Leader?"],
+                checkedIn: record.fields["Checked In?"]
+            }));
+
+            return { records, offset: response.offset };
+        }
+        
+        let offset: string | undefined;
+
+        do {
+            const response = await fetchPage(offset || "");
+            records.push(...response.records);
+            offset = response.offset;
+        } while (offset);
+    } catch (error) {
+        console.log(error);
+    }
 
     return records;
 }
