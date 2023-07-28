@@ -40,10 +40,6 @@ export default async(req: NextApiRequest, res: NextApiResponse) => {
             } while (offset);
 
             return res.status(200).json(records);
-
-            const maxPodSize = 22
-
-
         } catch (error) {
             console.log(error);
         }

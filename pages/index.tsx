@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import fuzzysort from 'fuzzysort'
 import { Record } from '@/lib/record'
 import { truncate } from 'fs'
@@ -100,7 +100,6 @@ We should:
 */
 
 export default function Home({ records }: { records: Record[] }) {
-  console.log("FOOBAR", { records })
   const [nameFilter, setNameFilter] = useState('');
   const [data, setData] = useState(records);
 
@@ -130,6 +129,9 @@ export default function Home({ records }: { records: Record[] }) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
+
+          <h2><span style={{ color: "#ff1a1a" }}>NOTICE</span>: IF YOU HAVE DIETRY NEEDS, PLEASE TALK TO LANI - THE CHEF IN THE KITCHEN</h2>
+        <div/>
         <h1>Outernet Check-In</h1>
         
         <section style={{
@@ -178,7 +180,7 @@ export default function Home({ records }: { records: Record[] }) {
                 }}>➕</td>
                 <td>{record.renderedName || record.name}</td>
                 <td>{record.pod}</td>
-                <td>{record.isLeader ? <span className="green">✅ Yes</span> : 'No'}</td>
+                <td>{record.isLeader ? <span className="green">Yes</span> : 'No'}</td>
                 <td>{record.checkedIn ? 'Yes' : 'No'}</td>
               </tr>
             ))}
@@ -286,7 +288,7 @@ export default function Home({ records }: { records: Record[] }) {
 }
 
 export async function getServerSideProps() {
-  const res = await fetch('http://localhost:3001/api/records');
+  const res = await fetch(`${process.env.URL}/api/records`);
   const records = await res.json();
 
   return {
