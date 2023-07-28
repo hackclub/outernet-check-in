@@ -48,7 +48,7 @@ export default async(req: NextApiRequest, res: NextApiResponse) => {
     if (req.method === "PATCH") {
         try {
             const checkIn = async (id: string, pod: string) => {
-                const resp = await fetch(`https://api.airtable.com/v0/applfCora9qnm274A/Main/${req.body.id}`, {
+                const resp = await fetch(`https://api.airtable.com/v0/applfCora9qnm274A/Main/${id}`, {
                     method: "PUT",
                     headers: {
                         Authorization: `Bearer ${process.env.AIRTABLE_ACCESS_TOKEN}`,
@@ -56,11 +56,12 @@ export default async(req: NextApiRequest, res: NextApiResponse) => {
                     },
                     body: JSON.stringify({
                         fields: {
-                            "Pod": req.body.pod,
+                            "Pod": pod,
                             "Checked In?": true
                         }
                     })
                 });
+                console.log({bar:await resp.json()});
                 return resp.ok;
             }
 
@@ -84,6 +85,7 @@ export default async(req: NextApiRequest, res: NextApiResponse) => {
             }
         } catch (error) {
             console.log(error);
+            console.log("PATCH ERROR")
             return res.status(500).json({ error: "Internal server error" });
         }
     }

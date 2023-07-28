@@ -48,7 +48,7 @@ export async function getServerRecords () {
     try {
         const fetchPage = async (offset: string) => {
             const pageSize = 100;
-            const response = await fetch(`https://api.airtable.com/v0/applfCora9qnm274A/Main?offset=${offset}&pageSize=${pageSize}`, {
+            const response = await fetch(`https://api.airtable.com/v0/applfCora9qnm274A/Main?offset=${offset}&pageSize=${pageSize}&fields[]=ID&fields[]=Name&fields[]=Pod&fields[]=Club%20Leader%3F&fields[]=Checked%20In%3F`, {
                 headers: {
                     Authorization: `Bearer ${process.env.AIRTABLE_ACCESS_TOKEN}`,
                 }
@@ -56,10 +56,10 @@ export async function getServerRecords () {
 
             const records: Record[] = (response.records || []).map((record: any) => ({
                 id: record.id,
-                name: record.fields["Name"],
-                pod: record.fields["Pod"],
-                isLeader: record.fields["Club Leader?"],
-                checkedIn: record.fields["Checked In?"]
+                name: record.fields["Name"] || "",
+                pod: record.fields["Pod"] || "",
+                isLeader: record.fields["Club Leader?"] || "",
+                checkedIn: record.fields["Checked In?"] || ""
             }));
 
             return { records, offset: response.offset };

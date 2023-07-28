@@ -286,6 +286,7 @@ export default function Home({ serverRecords }: { serverRecords: Record[] }) {
             }}>Double Click</span></button>
             <button className="success" onClick={async () => {
               const ids = renderedSelected.map((record: Record) => record.id);
+              console.log({ ids });
               await Events.checkInGroup(ids, "Blue Pod");
               await fetch("/api/records", {
                 method: "PATCH",
@@ -294,7 +295,7 @@ export default function Home({ serverRecords }: { serverRecords: Record[] }) {
                 },
                 body: JSON.stringify({
                   pod: selectedPod,
-                  ids,
+                  ids: ids,
                 })
               });
               setSelectedIds([]);
